@@ -1,5 +1,7 @@
 # 🕒 Yet Another Attendance System (YAAS)
 
+![2024-11-26 at 16 51 22](https://github.com/user-attachments/assets/32e6017e-28ad-48c2-a0e5-a608fcb63747)
+
 Welcome to **Yet Another Attendance System**, a Next.js project designed to showcase a modern, well-structured, and type-safe web application. This project demonstrates a comprehensive solution for managing employee clock-ins and clock-outs while offering a sleek, user-friendly interface for both employees and administrators.
 
 ⚠️ Note: This project was built primarily as a coding exercise. While it's fully functional, it's not intended for production use.
