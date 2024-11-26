@@ -5,6 +5,7 @@ import {
   primaryKey,
   sqliteTableCreator,
   text,
+  uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 import { type AdapterAccount } from "next-auth/adapters";
 
@@ -16,21 +17,26 @@ import { type AdapterAccount } from "next-auth/adapters";
  */
 export const createTable = sqliteTableCreator((name) => `fichajes_${name}`);
 
-export const users = createTable("user", {
-  id: text("id", { length: 255 })
-    .notNull()
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  name: text("name", { length: 255 }).notNull(),
-  email: text("email", { length: 255 }).notNull(),
-  emailVerified: int("email_verified", {
-    mode: "timestamp",
-  }).default(sql`(unixepoch())`),
-  role: text("role", { enum: ["admin", "employee"] })
-    .default("employee")
-    .notNull(),
-  image: text("image", { length: 255 }),
-});
+export const users = createTable(
+  "user",
+  {
+    id: text("id", { length: 255 })
+      .notNull()
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    name: text("name", { length: 255 }).notNull(),
+    email: text("email", { length: 255 }).notNull(),
+    emailVerified: int("email_verified", {
+      mode: "timestamp",
+    }).default(sql`(unixepoch())`),
+    role: text("role", { enum: ["admin", "employee"] })
+      .default("employee")
+      .notNull(),
+    image: text("image", { length: 255 }),
+    scheduleId: int("schedule_id").references(() => schedules.id),
+  },
+  (table) => ({ uniqueEmail: uniqueIndex("unique_email").on(table.email) }),
+);
 
 export const clockings = createTable(
   "clockings",
@@ -49,13 +55,54 @@ export const clockings = createTable(
   }),
 );
 
+export const schedules = createTable("schedules", {
+  id: int("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+  name: text("name", { length: 255 }).notNull(),
+});
+
+export const schedulesRelations = relations(schedules, ({ many }) => ({
+  schedulesDays: many(schedulesDays),
+  users: many(users),
+}));
+
+export const schedulesDays = createTable(
+  "schedules_days",
+  {
+    id: int("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
+    scheduleId: int("schedule_id")
+      .notNull()
+      .references(() => schedules.id, { onDelete: "cascade" }),
+    dayOfWeek: int("day_of_week").notNull(),
+    startTime: text("start_time").notNull(),
+    endTime: text("end_time").notNull(),
+  },
+  (table) => ({
+    uniqueScheduleTimeSlot: uniqueIndex("unique_schedule_day").on(
+      table.scheduleId,
+      table.dayOfWeek,
+      table.startTime,
+    ),
+  }),
+);
+
+export const schedulesDaysRelations = relations(schedulesDays, ({ one }) => ({
+  schedule: one(schedules, {
+    fields: [schedulesDays.scheduleId],
+    references: [schedules.id],
+  }),
+}));
+
 export const clockingsRelations = relations(clockings, ({ one }) => ({
   user: one(users, { fields: [clockings.userId], references: [users.id] }),
 }));
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   accounts: many(accounts),
   clockings: many(clockings),
+  schedules: one(schedules, {
+    fields: [users.scheduleId],
+    references: [schedules.id],
+  }),
 }));
 
 export const accounts = createTable(
