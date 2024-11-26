@@ -28,7 +28,6 @@ export default function SignInForm() {
 
   async function onSubmit(data: z.infer<typeof loginSchema>) {
     const res = await executeAsync(data);
-    console.log(res);
   }
 
   return (

@@ -1,25 +1,43 @@
 import { useForm } from "react-hook-form";
 import { useDialog } from "./use-dialog";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { userSchema } from "@/zod-schema/schema";
+import { type scheduleSchema, userSchema } from "@/zod-schema/schema";
 import { useAction } from "next-safe-action/hooks";
 import { createUser, getUser, updateUser } from "@/server/actions/users";
 import { toast } from "sonner";
 import { getS3URL, uploadFile } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import { type z } from "zod";
+import { getSchedules } from "@/server/actions/schedules";
 
 export default function useUserForm(userId?: string) {
   const [isLoading, setIsLoading] = useState(false);
+  const [schedules, setSchedules] = useState<{ id: number; name: string }[]>();
   const [avatar, setAvatar] = useState<string | undefined>(undefined);
   const { toggleModal } = useDialog();
   const form = useForm({
     resolver: zodResolver(userSchema),
-    defaultValues: { name: "", email: "", image: false, imageFile: undefined },
+    defaultValues: {
+      name: "",
+      email: "",
+      image: false,
+      imageFile: undefined,
+      scheduleId: "",
+    },
   });
   const { handleSubmit } = form;
 
   const serverAction = userId ? updateUser : createUser;
   const { executeAsync } = useAction(serverAction);
+
+  useEffect(() => {
+    async function fetchSchedules() {
+      const schedules = await getSchedules();
+      if (!schedules?.data) return;
+      setSchedules(schedules.data);
+    }
+    fetchSchedules().catch(console.error);
+  }, []);
 
   useEffect(() => {
     async function fetchUser() {
@@ -35,6 +53,7 @@ export default function useUserForm(userId?: string) {
         form.reset({
           name: data?.name ?? "",
           email: data?.email,
+          scheduleId: data?.scheduleId?.toString(),
         });
       } catch (error) {
         console.error(error);
@@ -52,6 +71,9 @@ export default function useUserForm(userId?: string) {
       name: form.getValues("name"),
       email: form.getValues("email"),
       image: form.getValues("image"),
+      scheduleId: !!form.getValues("scheduleId")
+        ? Number(form.getValues("scheduleId"))
+        : undefined,
     });
     if (!result) {
       toast.error("Something went wrong. Please try again");
@@ -69,5 +91,5 @@ export default function useUserForm(userId?: string) {
     }
   }
 
-  return { form, handleSubmit, onSubmit, isLoading, avatar };
+  return { form, handleSubmit, onSubmit, isLoading, avatar, schedules };
 }

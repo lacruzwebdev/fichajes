@@ -101,7 +101,15 @@ export const getClockings = actionClient.action(async () => {
   const data = await db.query.clockings.findMany({
     orderBy: [desc(clockings.clockIn)],
     with: {
-      user: true,
+      user: {
+        with: {
+          schedules: {
+            with: {
+              schedulesDays: true,
+            },
+          },
+        },
+      },
     },
   });
   return data;

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/sidebar";
 import { isAdmin } from "@/lib/utils";
 import { auth } from "@/server/auth";
-import { Clock, User } from "lucide-react";
+import { Calendar, Clock, User } from "lucide-react";
 import Link from "next/link";
 
 export default async function AdminSidebar() {
@@ -27,21 +27,19 @@ export default async function AdminSidebar() {
           <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {user && isAdmin(user) && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <Link href="/admin/admins">
-                      <User />
-                      Admins
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link href="/admin/users">
                     <User />
                     Users
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/admin/schedules">
+                    <Calendar />
+                    Schedules
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

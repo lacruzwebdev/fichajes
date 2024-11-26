@@ -3,9 +3,9 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { type ColumnDef } from "@tanstack/react-table";
 import { type z } from "zod";
-import { calculateTimeDifference, getS3URL } from "@/lib/utils";
+import { calculateTimeDifference, getS3URL, isClockingLate } from "@/lib/utils";
 import { type clockingSchema } from "@/zod-schema/schema";
-import { compareAsc, differenceInMinutes, format } from "date-fns";
+import { compareAsc, format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { ArrowUpDown } from "lucide-react";
 import ClockingColumnsActions from "./clocking-columns-actions";
@@ -55,7 +55,7 @@ export const columns: ColumnDef<z.infer<typeof clockingSchema>>[] = [
   },
   {
     accessorKey: "user",
-    filterFn: (row, columnId, filterValue) => {
+    filterFn: (row, columnId, filterValue: string) => {
       const user: {
         name: string;
       } = row.getValue(columnId);
@@ -89,16 +89,46 @@ export const columns: ColumnDef<z.infer<typeof clockingSchema>>[] = [
   {
     accessorKey: "clockIn",
     header: "Clock In Time",
-    cell: ({ row }) => <p>{format(row.original.clockIn, "HH:mm")}</p>,
+    cell: ({ row }) => {
+      const clockIn = row.original.clockIn;
+      const schedulesDays = row.original.user.schedules.schedulesDays;
+      const { isLate, formattedTime } = isClockingLate(clockIn, schedulesDays);
+      return (
+        <p>
+          {format(row.original.clockIn, "HH:mm")}{" "}
+          <span
+            className={`text-xs ${isLate ? "text-green-500" : "text-red-500"}`}
+          >
+            {formattedTime}
+          </span>
+        </p>
+      );
+    },
   },
   {
     accessorKey: "clockOut",
     header: "Clock Out Time",
-    cell: ({ row }) => (
-      <p>
-        {row.original.clockOut ? format(row.original.clockOut, "HH:mm") : "---"}
-      </p>
-    ),
+    cell: ({ row }) => {
+      const clockOut = row.original.clockOut;
+      if (!clockOut) return <p>---</p>;
+      const schedulesDays = row.original.user.schedules.schedulesDays;
+      const { isLate, formattedTime } = isClockingLate(
+        clockOut,
+        schedulesDays,
+        "endTime",
+      );
+
+      return (
+        <p>
+          {format(clockOut, "HH:mm")}{" "}
+          <span
+            className={`text-xs ${isLate ? "text-red-500" : "text-green-500"}`}
+          >
+            {formattedTime}
+          </span>
+        </p>
+      );
+    },
   },
   {
     accessorKey: "date",

@@ -1,8 +1,8 @@
 "use server";
 import { actionClient, ActionError } from "@/lib/safe-action";
-import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db } from "../db";
-import { clockings, users } from "../db/schema";
+import { users } from "../db/schema";
 import { z } from "zod";
 import { auth } from "../auth";
 import { isAdmin } from "@/lib/utils";
@@ -29,6 +29,9 @@ export const getUser = actionClient
     await validateAdminSession();
     const user = await db.query.users.findFirst({
       where: eq(users.id, parsedInput),
+      with: {
+        schedules: true,
+      },
     });
     if (!user) throw new ActionError("User doesn't exist");
     return user;
@@ -51,12 +54,14 @@ export const createUser = actionClient
       presignedUrl = urls.presignedUrl;
     }
 
+    console.log({ parsedInput });
     const [newUser] = await db
       .insert(users)
       .values({
         name: parsedInput.name,
         email: parsedInput.email,
         image: imageUrl,
+        scheduleId: parsedInput.scheduleId,
       })
       .returning({ id: users.id });
 
@@ -103,6 +108,7 @@ export const updateUser = actionClient
     if (
       parsedInput.email === existingUser.email &&
       parsedInput.name === existingUser.name &&
+      parsedInput.scheduleId === existingUser.scheduleId &&
       !parsedInput.image
     )
       throw new ActionError("No changes detected");
@@ -124,6 +130,7 @@ export const updateUser = actionClient
         name: parsedInput.name,
         email: parsedInput.email,
         image: imageUrl ?? existingUser.image,
+        scheduleId: parsedInput.scheduleId,
       })
       .where(eq(users.id, parsedInput.id))
       .returning({ id: users.id });
