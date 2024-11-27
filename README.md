@@ -29,9 +29,9 @@ This demonstrates a way to use cloud storage systems and implement secure file u
 - **[next-safe-actions](https://github.com/themarkiv/next-safe-actions):** Type-safe server actions for modern Next.js applications.
 - **[Zod](https://zod.dev/):** Schema validation and type inference for reliable input handling.
 - **[Drizzle ORM](https://orm.drizzle.team/):** Type-safe and lightweight ORM for database management.
-- **SQLite:** A simple and powerful database for lightweight data storage.
+- **[SQLite](https://www.sqlite.org/):** A simple and powerful database for lightweight data storage.
 - **[shadcn/ui](https://shadcn.dev/):** A component library to create modern and beautiful interfaces.
-- - **[Zustand](https://github.com/pmndrs/zustand):** A small, fast, and scalable state management solution for React, used to manage global state across the app.
+- **[Zustand](https://github.com/pmndrs/zustand):** A small, fast, and scalable state management solution for React, used to manage global state across the app.
 - **[MinIO](https://min.io/):** Object storage for securely managing file uploads.
 
 ## 📚 What This Project Demonstrates
